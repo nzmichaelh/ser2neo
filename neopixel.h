@@ -1,7 +1,11 @@
+// NeoPixel ring driver.
+//
 #pragma once
 
 #include <stdint.h>
 
+// NeoPixel ring driver.
+//
 class NeoPixel {
    public:
     NeoPixel() { clear(); }
@@ -9,7 +13,6 @@ class NeoPixel {
     void init();
 
     void clear();
-    void append(uint8_t r, uint8_t g, uint8_t b);
     void append(uint8_t b);
     void write();
 

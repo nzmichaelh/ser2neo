@@ -1,30 +1,43 @@
+// Half-duplex interrupt based serial port.
+//
 #include "serial.h"
 
 #include <avr/io.h>
 #include <avr/interrupt.h>
+#include <avr/sleep.h>
 
 Serial* Serial::instance_;
 
 #define _clear(port, pin) port &= ~_BV(pin)
 #define _set(port, pin) port |= _BV(pin)
 
+// Initialise the hardware.
 void Serial::init() {
     state_ = Idle;
     rx_full_ = false;
 
     instance_ = this;
 
-    DDRB |= _BV(TxPin);
-    DDRB &= ~_BV(RxPin);
-    PORTB |= _BV(TxPin);
+    // Set up the GPIOs.
+    _set(DDRB, TxPin);
+    _set(PORTB, TxPin);
+    _clear(DDRB, RxPin);
 
+    // Set up the timer.
+    static_assert(BitTime > 50, "BitTime is too short");
+    static_assert(BitTime < 255*2/3, "BitTime may overflow");
     OCR1C = BitTime;
-    TCCR1 = _BV(CTC1) | _BV(PWM1A) | _BV(CS11);
+    TCCR1 = _BV(CTC1) | _BV(PWM1A);
 
+    static_assert(Prescale == 2, "Mismatched prescaler");
+    TCCR1 |= _BV(CS11);
+
+    // Set up the pin change interrupt.
     PCMSK = _BV(RxPin);
     _set(GIMSK, PCIE);
 }
 
+// Handle the pin change interrupt by starting receive.
 void Serial::pcint0() {
     _clear(PCMSK, RxPin);
     _clear(TIMSK, TOV1);  // PENDING
@@ -32,7 +45,6 @@ void Serial::pcint0() {
     OCR1C = (BitTime / 2 * 3) - (PCIntDelay / Prescale);
     TCNT1 = 0;
     _set(TIFR, TOV1);
-    //    PORTB ^= _BV(StatePin);
 
     state_ = Receive;
     bits_ = 8;
@@ -40,11 +52,11 @@ void Serial::pcint0() {
     _set(TIMSK, TOV1);
 }
 
+// Handle the timer overflow interrupt by doing the next bit.
 inline void Serial::timer1ovf() {
     switch (state_) {
         case Receive: {
             auto got = PINB;
-            //        PORTB ^= _BV(StatePin);
             OCR1C = BitTime;
             if (bits_ > 0) {
                 rxing_ >>= 1;
@@ -77,12 +89,13 @@ inline void Serial::timer1ovf() {
     if (state_ == Idle) {
         _clear(TIMSK, TOV1);
         _set(PCMSK, RxPin);
-        //        _set(PORTB, StatePin);
     }
 }
 
+// Wait until the hardware is free then start the transmit.
 void Serial::putch(uint8_t ch) {
     while (state_ != Idle) {
+        sleep_cpu();
     }
     state_ = Transmit;
     txing_ = (ch << 1) | 0xFE00;
@@ -92,8 +105,17 @@ void Serial::putch(uint8_t ch) {
     _set(TIMSK, TOV1);
 }
 
+// Send a string.
+void Serial::putstr(const char* str) {
+    for (; *str != '\0'; str++) {
+        putch(*str);
+    }
+}
+
+// Wait until a character is received, then return it.
 uint8_t Serial::getch() {
     while (!rx_full_) {
+        sleep_cpu();
     }
     uint8_t ch = rxed_;
     rx_full_ = false;
@@ -107,55 +129,3 @@ inline void Serial::timer1ovf_bounce() { instance_->timer1ovf(); }
 ISR(TIMER1_OVF_vect) { Serial::timer1ovf_bounce(); }
 
 ISR(PCINT0_vect) { Serial::pcint0_bounce(); }
-
-#if 0
-uint8_t Serial::mark(uint8_t time) {
-    uint8_t at = TCNT1 + time;
-    OCR1A = at;
-    TIFR |= _BV(OCF1A);
-    return at;
-}
-
-void Serial::delay(uint8_t& at, uint8_t time) {
-    at += time;
-    while (!(TIFR & _BV(OCF1A))) {
-    }
-    OCR1A = at;
-    TIFR |= _BV(OCF1A);
-}
-
-void Serial::putch(uint8_t ch) {
-    PORTB &= ~_BV(TxPin);
-    auto at = mark();
-    delay(at);
-
-    for (auto i = 0; i < 8; i++) {
-        if (ch & 1) {
-            PORTB |= _BV(TxPin);
-        } else {
-            PORTB &= ~_BV(TxPin);
-        }
-        ch >>= 1;
-        delay(at);
-    }
-    PORTB |= _BV(TxPin);
-    delay(at);
-}
-
-uint8_t Serial::getch() {
-    uint8_t rx = 0;
-    while (PINB & _BV(RxPin)) {
-    }
-    auto at = mark(BitTime/2*3);
-
-    for (auto i = 0; i < 8; i++) {
-        delay(at);
-        rx >>= 1;
-        if (PINB & _BV(RxPin)) {
-            rx |= 0x80;
-        }
-    }
-    delay(at, BitTime/4*3);
-    return rx;
-}
-#endif

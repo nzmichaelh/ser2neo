@@ -1,40 +1,37 @@
-#include <avr/io.h>
+// Takes commands over serial and updates a NeoPixel LED ring.
+//
 #include <avr/interrupt.h>
-#include <avr/sleep.h>
-#include <util/delay.h>
 #include <string.h>
 
 #include "neopixel.h"
 #include "serial.h"
 
-extern Serial serial;
-
-static NeoPixel leds;
-Serial serial;
-
-class Ser2Led {
+// Main application class.
+class Ser2Neo {
    public:
-    static void init();
-    static void run();
+    void init();
+    void run();
+
+   private:
+    static const uint8_t EOF = '\r';
+    static const uint8_t ESC = '+';
+
+    int read_escaped();
+    void read_leds();
+    void wait_eol();
+    void send_ok(const char* msg);
+
+    NeoPixel leds;
+    Serial serial;
 };
 
-void Ser2Led::init() {
+void Ser2Neo::init() {
     leds.init();
     serial.init();
 }
 
-uint8_t getch() { return 'x'; }
-
-void send(const char* str) {
-    for (; *str != '\0'; str++) {
-        serial.putch((char)*str);
-    }
-}
-
-static const uint8_t EOF = '\r';
-static const uint8_t ESC = '+';
-
-int read_escaped() {
+// Read a character, de-escaping if required.
+int Ser2Neo::read_escaped() {
     auto got = serial.getch();
     if (got == EOF) {
         return -1;
@@ -49,9 +46,10 @@ int read_escaped() {
     return got;
 }
 
-void read_leds() {
+// Read the (potentially escaped) LED levels.
+void Ser2Neo::read_leds() {
     leds.clear();
-    for (;;) {
+    while (true) {
         int got = read_escaped();
         if (got < 0) {
             return;
@@ -60,95 +58,57 @@ void read_leds() {
     }
 }
 
-void wait_eol() {
+// Wait until the end-of-line character is received.
+void Ser2Neo::wait_eol() {
     while (serial.getch() != EOF) {
     }
 }
 
-void Ser2Led::run() {
+// Send OK with an optional message.
+void Ser2Neo::send_ok(const char* msg) {
+    wait_eol();
+    serial.putstr("OK");
+    if (msg != nullptr) {
+        serial.putstr(" ");
+        serial.putstr(msg);
+    }
+    serial.putstr("\n");
+}
+
+// Run the main loop.  Process and run commands.
+void Ser2Neo::run() {
     sei();
 
-    send("READY\n");
+    serial.putstr("READY\n");
 
     for (;;) {
         switch (serial.getch()) {
             case '?':
-                wait_eol();
-                send("OK ser2led\n");
+                send_ok("ser2neo 1 neopixel16 grb");
                 break;
             case '!':
-                wait_eol();
-                send("OK sync\n");
-                break;
-            case 'w':
-                wait_eol();
-                leds.write();
-                send("OK\n");
+                send_ok("sync");
                 break;
             case 'l':
                 read_leds();
                 leds.write();
-                send("OK\n");
+                serial.putstr("OK\n");
                 break;
             case EOF:
                 break;
             default:
                 wait_eol();
-                send("ERROR\n");
+                serial.putstr("ERROR\n");
                 break;
         }
     }
 }
 
+static Ser2Neo ser2led;
+
 int main() {
-    Ser2Led::init();
-    Ser2Led::run();
+    ser2led.init();
+    ser2led.run();
 
     return 0;
 }
-
-#if 0
-#if 0
-    for (;;) {
-        serial.putch('U');
-        _delay_ms(2);
-        serial.putch('x');
-        _delay_ms(2);
-    }
-#endif
-#if 1
-    for (;;) {
-        uint8_t sum = 0;
-        for (;;) {
-            auto got = serial.getch();
-            if (got == '\r') {
-                break;
-            }
-            sum += got;
-        }
-        serial.putch(sum);
-    }
-#endif
-#if 1
-    for (;;) {
-        uint8_t got = serial.getch();
-//        _delay_ms(2);
-        serial.putch(got);
-//        serial.putch(serial.getch());
-    }
-#endif
-#if 1
-    for (;;) {
-        send("READY ");
-//        send("R");
-        _delay_ms(10);
-    }
-#endif
-#if 0
-    leds.clear();
-    for (;;) {
-        leds.write();
-        _delay_ms(10);
-    }
-#endif
-#endif
