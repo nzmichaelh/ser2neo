@@ -1,6 +1,9 @@
 """Serial to NeoPixel client side driver."""
+from __future__ import division
+
 import serial
 import time
+import struct
 
 
 def _clip(v, top=1.0):
@@ -29,6 +32,8 @@ class RGB:
         return RGB(*(
             _clip(x / level) for x in self.rgb))
 
+    __div__ = __truediv__
+    
     def __repr__(self):
         return '<RGB %.2f %.2f %.2f>' % self.rgb
 
@@ -44,8 +49,7 @@ class Colour:
 
 
 def _escape(buf):
-    EOL = ord('\r')
-    ESC = ord('+')
+    EOL, ESC = ord('\r'), ord('+')
 
     for ch in buf:
         if ch == EOL or ch == ESC:
@@ -66,7 +70,7 @@ class NeoPixels:
     def __init__(self, port, nleds=16):
         self.port = port
         self.nleds = nleds
-        self.brightness = 0.1
+        self.brightness = 1
         self.clear()
 
     def clear(self):
@@ -90,11 +94,15 @@ class NeoPixels:
         buf = b'l'
         for rgb in self.leds:
             rgb = rgb * self.brightness
-            buf += bytes((
+            buf += struct.pack('BBB',
                 int(_clip(rgb.rgb[1] * 0xFF, 0xFF)),
                 int(_clip(rgb.rgb[0] * 0xFF, 0xFF)),
-                int(_clip(rgb.rgb[2] * 0xFF, 0xFF))))
-        buf = bytes(_escape(buf))
+                int(_clip(rgb.rgb[2] * 0xFF, 0xFF)))
+        if str == bytes:
+            ints = (ord(x) for x in buf)
+            buf = b''.join(chr(x) for x in _escape(ints))
+        else:
+            buf = bytes(_escape(buf))
         return buf + b'\r'
 
     def send(self):

@@ -1,4 +1,6 @@
 """Demo that shows all the colours of the rainbow."""
+from __future__ import division
+
 import ser2neo
 import colorsys
 
@@ -14,7 +16,7 @@ def main():
 
         for i in range(neo.nleds):
             hue = offset + i / neo.nleds
-            hue %= 1
+            hue %= 1.0
             neo.set(i, ser2neo.RGB(*colorsys.hsv_to_rgb(hue, 1, 0.1)))
 
         offset += 0.003
