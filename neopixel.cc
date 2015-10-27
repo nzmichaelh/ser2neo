@@ -14,6 +14,8 @@ void NeoPixel::init() {
     DDRB |= _BV(1);
     TCCR0A = _BV(WGM01) | _BV(WGM00) | _BV(COM0B1) | _BV(COM0B0);
     TCCR0B = _BV(WGM02) | _BV(CS00);
+
+    static_assert(Reload > 15, "Inter-bit time is probably too short.");
     OCR0A = Reload;
     OCR0B = Low;
 }

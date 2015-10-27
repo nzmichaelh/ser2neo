@@ -84,7 +84,7 @@ void Ser2Neo::run() {
     for (;;) {
         switch (serial.getch()) {
             case '?':
-                send_ok("ser2neo 1 neopixel16 grb");
+                send_ok("ser2neo 1 neopixel 16 grb");
                 break;
             case '!':
                 send_ok("sync");
