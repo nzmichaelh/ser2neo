@@ -1,4 +1,5 @@
 APP ?= $(notdir $(PWD))
+VERSION ?= $(shell date +%Y%m%d)+git$(shell git describe --always)
 
 SRC = $(wildcard *.cc)
 OBJ = $(SRC:%.cc=%.o)
@@ -23,3 +24,10 @@ usb-flash: $(APP).hex
 
 clean:
 	rm -f $(APP).hex $(APP).elf $(OBJ) *~ *.ii
+
+dist:
+	rm -rf tmp
+	mkdir tmp
+	git archive --prefix=$(APP)-$(VERSION)/ HEAD | gzip > tmp/$(APP)-$(VERSION).tar.gz
+	cd tmp && git clone $$(readlink -f ..) $(APP)
+	$(MAKE) -C tmp/$(APP)
