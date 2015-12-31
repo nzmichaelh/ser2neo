@@ -1,5 +1,19 @@
 // Half-duplex interrupt based serial port.
 //
+// Copyright 2015 Google Inc.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 #pragma once
 
 #include <stdint.h>
@@ -14,7 +28,7 @@ class Serial {
 
     void putch(uint8_t ch);
     void putstr(const char* str);
-    
+
     uint8_t getch();
 
    private:
@@ -46,7 +60,7 @@ class Serial {
     uint8_t bits_;
     volatile uint8_t rxed_;
     volatile bool rx_full_;
-    
+
     volatile uint16_t txing_;
 
     static Serial* instance_;
