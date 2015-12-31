@@ -5,6 +5,8 @@ ser2neo makes it easier to drive a NeoPixel ring by
 implementing the NeoPixel protocol in an ATTINY85 and
 exposing it through a serial interface.
 
+Note: This is not an official Google product.
+
 ## Hardware
 This software was developed for a
 [OLIMEXINO-85](https://www.olimex.com/Products/Duino/AVR/OLIMEXINO-85-ASM/)
