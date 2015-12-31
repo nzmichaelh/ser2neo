@@ -18,8 +18,10 @@
 
 #include <stdint.h>
 
-// NeoPixel ring driver.
-//
+/// NeoPixel ring driver.
+///
+/// Implemented as a bit-banged loop.
+///
 class NeoPixel {
    public:
     NeoPixel() { clear(); }

@@ -20,7 +20,11 @@
 #include "neopixel.h"
 #include "serial.h"
 
-// Main application class.
+/// Main application class.
+///
+/// Reads commands from the serial port, processes them, and
+/// responds.
+///
 class Ser2Neo {
    public:
     void init();
@@ -33,18 +37,19 @@ class Ser2Neo {
     int read_escaped();
     void read_leds();
     void wait_eol();
-    void send_ok(const char* msg);
+    void send_ok(const char* msg=nullptr);
 
     NeoPixel leds;
     Serial serial;
 };
 
+/// Initialise the hardware.
 void Ser2Neo::init() {
     leds.init();
     serial.init();
 }
 
-// Read a character, de-escaping if required.
+/// Read a character, de-escaping if required.
 int Ser2Neo::read_escaped() {
     auto got = serial.getch();
     if (got == EOF) {
@@ -60,7 +65,7 @@ int Ser2Neo::read_escaped() {
     return got;
 }
 
-// Read the (potentially escaped) LED levels.
+/// Read the (potentially escaped) LED levels.
 void Ser2Neo::read_leds() {
     leds.clear();
     while (true) {
@@ -72,13 +77,13 @@ void Ser2Neo::read_leds() {
     }
 }
 
-// Wait until the end-of-line character is received.
+/// Wait until the end-of-line character is received.
 void Ser2Neo::wait_eol() {
     while (serial.getch() != EOF) {
     }
 }
 
-// Send OK with an optional message.
+/// Send OK with an optional message.
 void Ser2Neo::send_ok(const char* msg) {
     wait_eol();
     serial.putstr("OK");
@@ -89,7 +94,7 @@ void Ser2Neo::send_ok(const char* msg) {
     serial.putstr("\n");
 }
 
-// Run the main loop.  Process and run commands.
+/// Run the main loop.  Process and run commands.
 void Ser2Neo::run() {
     sei();
 

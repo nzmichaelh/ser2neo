@@ -25,7 +25,7 @@ Serial* Serial::instance_;
 #define _clear(port, pin) port &= ~_BV(pin)
 #define _set(port, pin) port |= _BV(pin)
 
-// Initialise the hardware.
+/// Initialise the hardware.
 void Serial::init() {
     state_ = Idle;
     rx_full_ = false;
@@ -51,7 +51,7 @@ void Serial::init() {
     _set(GIMSK, PCIE);
 }
 
-// Handle the pin change interrupt by starting receive.
+/// Handle the pin change interrupt by starting receive.
 void Serial::pcint0() {
     _clear(PCMSK, RxPin);
     _clear(TIMSK, TOV1);  // PENDING
@@ -66,7 +66,7 @@ void Serial::pcint0() {
     _set(TIMSK, TOV1);
 }
 
-// Handle the timer overflow interrupt by doing the next bit.
+/// Handle the timer overflow interrupt by doing the next bit.
 inline void Serial::timer1ovf() {
     switch (state_) {
         case Receive: {
@@ -106,7 +106,7 @@ inline void Serial::timer1ovf() {
     }
 }
 
-// Wait until the hardware is free then start the transmit.
+/// Wait until the hardware is free then start the transmit.
 void Serial::putch(uint8_t ch) {
     while (state_ != Idle) {
         sleep_cpu();
@@ -119,14 +119,14 @@ void Serial::putch(uint8_t ch) {
     _set(TIMSK, TOV1);
 }
 
-// Send a string.
+/// Send a string.
 void Serial::putstr(const char* str) {
     for (; *str != '\0'; str++) {
         putch(*str);
     }
 }
 
-// Wait until a character is received, then return it.
+/// Wait until a character is received, then return it.
 uint8_t Serial::getch() {
     while (!rx_full_) {
         sleep_cpu();

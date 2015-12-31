@@ -23,7 +23,7 @@
 
 extern Serial serial;
 
-// Initialise the hardware.
+/// Initialise the hardware.
 void NeoPixel::init() {
     DDRB |= _BV(1);
     TCCR0A = _BV(WGM01) | _BV(WGM00) | _BV(COM0B1) | _BV(COM0B0);
@@ -34,13 +34,13 @@ void NeoPixel::init() {
     OCR0B = Low;
 }
 
-// Set all the LEDs to off and restart at the first LED.
+/// Set all the LEDs to off and restart at the first LED.
 void NeoPixel::clear() {
     p_ = bits_;
     memset(bits_, Low, sizeof(bits_));
 }
 
-// Append a byte to the stream.
+/// Append a byte to the stream.
 void NeoPixel::append(uint8_t b) {
     if (p_ <= (bits_ + sizeof(bits_) - Tail - BitsPerColour)) {
         for (auto i = 0; i < BitsPerColour; i++) {
@@ -50,7 +50,7 @@ void NeoPixel::append(uint8_t b) {
     }
 }
 
-// Write to the LEDs.
+/// Write to the LEDs.
 void NeoPixel::write() {
     bits_[sizeof(bits_) - 1] = Stop;
 

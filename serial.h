@@ -18,10 +18,10 @@
 
 #include <stdint.h>
 
-// Half-duplex interrupt based serial port.
-//
-// Loosely based on AVR304.
-//
+/// Half-duplex interrupt based serial port.
+///
+/// Loosely based on AVR304.
+///
 class Serial {
    public:
     void init();
