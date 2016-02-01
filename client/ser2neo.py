@@ -16,6 +16,7 @@
 from __future__ import division
 
 import serial
+import serial.tools.list_ports
 import time
 import struct
 
@@ -33,18 +34,15 @@ class RGB:
 
     def __add__(self, other):
         """Componentwise addition."""
-        return RGB(*list(
-            _clip(x + y) for x, y in zip(self.rgb, other.rgb)))
+        return RGB(*list(_clip(x + y) for x, y in zip(self.rgb, other.rgb)))
 
     def __mul__(self, level):
         """Scalar multiplier."""
-        return RGB(*(
-            _clip(x * level) for x in self.rgb))
+        return RGB(*(_clip(x * level) for x in self.rgb))
 
     def __truediv__(self, level):
         """Scalar division."""
-        return RGB(*(
-            _clip(x / level) for x in self.rgb))
+        return RGB(*(_clip(x / level) for x in self.rgb))
 
     __div__ = __truediv__
 
@@ -64,17 +62,28 @@ class Colour:
 
 def _escape(buf):
     EOL, ESC = ord('\r'), ord('+')
+    special = set((EOL, ESC, ord('?')))
 
     for ch in buf:
-        if ch == EOL or ch == ESC:
+        if ch in special:
             yield ESC
             yield ch ^ ESC
         else:
             yield ch
 
 
-def open_port(name):
+def first_serial():
+    for info in serial.tools.list_ports.comports():
+        device = info[0]
+        if 'USB' in device or 'ACM' in device:
+            return device
+    return '/dev/ttyUSB0'
+
+
+def open_port(name=None):
     """Open the serial connection to the adaptor."""
+    if name is None:
+        name = first_serial()
     return serial.Serial(name, 57600, timeout=0.02)
 
 
@@ -108,10 +117,9 @@ class NeoPixels:
         buf = b'l'
         for rgb in self.leds:
             rgb = rgb * self.brightness
-            buf += struct.pack('BBB',
-                int(_clip(rgb.rgb[1] * 0xFF, 0xFF)),
-                int(_clip(rgb.rgb[0] * 0xFF, 0xFF)),
-                int(_clip(rgb.rgb[2] * 0xFF, 0xFF)))
+            buf += struct.pack('BBB', int(_clip(rgb.rgb[1] * 0xFF, 0xFF)),
+                               int(_clip(rgb.rgb[0] * 0xFF, 0xFF)),
+                               int(_clip(rgb.rgb[2] * 0xFF, 0xFF)))
         if str == bytes:
             ints = (ord(x) for x in buf)
             buf = b''.join(chr(x) for x in _escape(ints))

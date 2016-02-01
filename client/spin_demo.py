@@ -17,7 +17,7 @@ import ser2neo
 
 
 def main():
-    port = ser2neo.open_port('/dev/ttyUSB0')
+    port = ser2neo.open_port()
     neo = ser2neo.NeoPixels(port)
 
     p0 = 0

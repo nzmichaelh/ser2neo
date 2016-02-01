@@ -18,7 +18,7 @@ import time
 
 
 def main():
-    port = ser2neo.open_port('/dev/ttyUSB0')
+    port = ser2neo.open_port()
     neo = ser2neo.NeoPixels(port)
 
     at = 0

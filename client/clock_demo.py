@@ -23,7 +23,7 @@ def angle2idx(neo, angle, limit):
 
 
 def main():
-    port = ser2neo.open_port('/dev/ttyUSB0')
+    port = ser2neo.open_port()
     neo = ser2neo.NeoPixels(port)
 
     anim = ser2neo.Animator()
