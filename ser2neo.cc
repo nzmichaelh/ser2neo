@@ -14,7 +14,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-#include <avr/interrupt.h>
 #include <string.h>
 
 #include "neopixel.h"
@@ -96,8 +95,6 @@ void Ser2Neo::send_ok(const char* msg) {
 
 /// Run the main loop.  Process and run commands.
 void Ser2Neo::run() {
-    sei();
-
     serial.putstr("READY\n");
 
     for (;;) {
