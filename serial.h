@@ -1,4 +1,4 @@
-// Half-duplex interrupt based serial port.
+// Blocking serial port.
 //
 // Copyright 2015 Google Inc.
 //
