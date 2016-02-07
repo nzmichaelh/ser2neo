@@ -55,6 +55,6 @@ add_executable(
 
 target_link_libraries(ser2neo lpcopen)
 
-set(EXTRA_FLAGS "-Wall -Os --specs=nano.specs -DCORE_M0PLUS -Wl,-T${CMAKE_SOURCE_DIR}/${LDSCRIPT},-gc-sections -flto -fno-builtin-printf -fno-builtin-putchar -fno-builtin-puts")
+set(EXTRA_FLAGS "-Wall -Os -flto --specs=nano.specs --specs=nosys.specs -DCORE_M0PLUS -Wl,-T${CMAKE_SOURCE_DIR}/${LDSCRIPT},-gc-sections -fno-builtin-printf -fno-builtin-putchar -fno-builtin-puts -Wl,-Map,ser2neo.map,--cref")
 set(CMAKE_C_FLAGS "${COMMON_FLAGS} ${RUNTIME_FLAGS} ${EXTRA_FLAGS} -Wno-incompatible-pointer-types")
 set(CMAKE_CXX_FLAGS "${COMMON_FLAGS} ${RUNTIME_FLAGS} ${EXTRA_FLAGS} -fno-exceptions -fno-rtti -std=gnu++14 -save-temps=obj")
