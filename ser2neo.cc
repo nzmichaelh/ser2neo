@@ -42,6 +42,22 @@ class Ser2Neo {
     Serial serial;
 };
 
+extern "C" void SystemInit() {
+    Chip_SYSCTL_PowerUp(SYSCTL_SLPWAKE_IRC_PD);
+    Chip_Clock_SetSystemPLLSource(SYSCTL_PLLCLKSRC_IRC);
+    Chip_Clock_SetMainClockSource(SYSCTL_MAINCLKSRC_IRC);
+    Chip_FMC_SetFLASHAccess(FLASHTIM_20MHZ_CPU);
+
+    Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_IOCON);
+    Chip_Clock_EnablePeriphClock(SYSCTL_CLOCK_SWM);
+
+    Chip_SWM_DisableFixedPin(SWM_FIXED_SWCLK);
+    Chip_SWM_DisableFixedPin(SWM_FIXED_SWDIO);
+
+    Chip_SWM_MovablePinAssign(SWM_U0_TXD_O, 4);
+    Chip_SWM_MovablePinAssign(SWM_U0_RXD_I, 0);
+}
+
 /// Initialise the hardware.
 void Ser2Neo::init() {
     leds.init();
@@ -120,11 +136,11 @@ void Ser2Neo::run() {
     }
 }
 
-static Ser2Neo ser2led;
+static Ser2Neo ser2neo;
 
 int main() {
-    ser2led.init();
-    ser2led.run();
+    ser2neo.init();
+    ser2neo.run();
 
     return 0;
 }
