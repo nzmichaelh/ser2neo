@@ -44,6 +44,8 @@ const uint16_t NeoPixel::bits_[] = {
 
 /// Initialise the hardware.
 void NeoPixel::init() {
+    clear();
+    
     LPC_FMC->FLASHCFG = 0;            // 1 wait state instead of 1
 
     LPC_SWM->PINENABLE0 |= 1<<2;            // disable SWCLK
@@ -86,7 +88,7 @@ void NeoPixel::send(uint16_t cmd) {
 void NeoPixel::write() {
     send(0);
     send(0);
-    for (auto p = bytes_; p < p_; p++) {
+    for (auto p = bytes_; p < bytes_ + sizeof(bytes_); p++) {
         auto ch = *p;
         send(bits_[ch >> 4]);
         send(bits_[ch & 0xF]);
